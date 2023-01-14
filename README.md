@@ -36,27 +36,22 @@ git clone https://github.com/gwatkinson/automated_prior_analysis.git
 
 ### Reproducing the environment
 
-The environment used to run the code is available in the `environment.yml` file.
-This implementation uses `pytorch=1.13`, and `pytorch-cuda=11.7`, it is therefore quite heavy.
+The environment used to run the code is available in the `poetry.lock` file, it is generated with the `pyproject.toml` file.
 
-You can create the environment using the following command:
-
-```bash
-conda env create -f environment.yml # -n YOURENV  # optional name
-```
-
-Lock files are also available in the `conda` folder. You can use them to create the environment using the following commands:
+If you have [poetry installed](https://python-poetry.org/docs/), you can create the environment using the following command:
 
 ```bash
-conda create --name YOURENV --file conda/conda-linux-64.lock  # for linux
-conda create --name YOURENV --file conda/conda-win-64.lock  # for windows
+poetry install
 ```
 
-Lastly, to install our package in editable mode, in order to have access to the functions defined in `src`, run the following command:
+This will create a virtual environment with all the dependencies taht are specified in the lock file, needed to run the code. It will also install the directory as a package, so that you can import the modules in the `src` folder.
+
+Alternatively, you can install the dependencies manually using `pip`:
 
 ```bash
-pip install -e .
+pip install -r requirements.txt
 ```
+This will install the dependencies in your current environment.
 
 ### Pre-commit
 
