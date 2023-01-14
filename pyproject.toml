@@ -8,8 +8,21 @@ readme = "README.md"
 packages = [{include = "src"}]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = ">=3.8, <3.12"
+# Classic data packages
+scipy = "^1.10.0"
+numpy = "^1.24.1"
+pandas = "^1.5.2"
+# Plotting packages
+matplotlib = "^3.6.3"
+seaborn = "^0.12.2"
 
+
+[tool.poetry.group.dev.dependencies]
+jupyter = "^1.0.0"
+notebook = "^6.5.2"
+ipywidgets = "^8.0.4"
+pre-commit = "^2.21.0"
 
 [build-system]
 requires = ["poetry-core"]
