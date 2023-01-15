@@ -41,16 +41,16 @@ def prior_alpha(mu):
 def prior_beta(sigma):
     return random.normal(key)*sigma**2
 
-def generate_samples(alpha, sigma, sigma_beta_1, sigma_beta_2, X1, X2, Y):
+def generate_samples(mu, sigma, sigma_beta_1, sigma_beta_2, X1, X2, Y):
     N = 1000
     beta_1 = np.zeros(N)
     beta_2 = np.zeros(N)
     alphas = np.zeros(N)
 
     burn_in = 0
-    alpha_tmp = 0
-    beta_tmp1 = 0
-    beta_tmp2 = 0
+    alpha_tmp = prior_alpha(mu)
+    beta_tmp1 = prior_beta(sigma_beta_1)
+    beta_tmp2 = prior_beta(sigma_beta_2)
     for i in range(N+burn_in):
         key = random.PRNGKey(0)
         key, subkey = random.split(key)
