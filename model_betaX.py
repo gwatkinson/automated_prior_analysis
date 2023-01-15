@@ -4,14 +4,14 @@ def generate_data(n_samples):
     rng = nps.random.default_rng(RANDOM_SEED)
     alpha = 0.25
     sigma_e = 1
-    betas = [-1, 0.5]
-    mean = [0.5, 1, 1, 1]
-    sigmas = [1, 0.7, 0.9, 1]
-    cov = [[sigmas[0]**2, 0, 0, 0.1], [0, sigmas[1]**2, 0.2, 0.65], [0, 0.2, sigmas[2]**2, 0.5], [0.1, 0.65, 0.5, sigmas[3]**2]]
+    betas = [-1, 1.5]
+    mean = [0.5, 0.75, 1.5]
+    sigmas = [1, 0.7**0.5, 1.2]
+    cov = [[sigmas[0]**2, 0, 0], [0, sigmas[1]**2, 0.7], [0, 0.7, sigmas[2]**2]]
    
     X_samples = nps.random.multivariate_normal(mean=mean, cov=cov, size=n_samples)
    
-    y = alpha + betas[0] * X_samples[:, 0]  + betas[1] * X_samples[:, 3] + rng.normal(size=n_samples) * sigma_e
+    y = alpha + betas[0] * X_samples[:, 0]  + betas[1] * X_samples[:, 1] + rng.normal(size=n_samples) * sigma_e
    
     return y, X_samples
 
@@ -28,7 +28,6 @@ Y = np.array(Y)
 X1 = np.array(X_samples[:,0])
 X2 = np.array(X_samples[:,1])
 X3 = np.array(X_samples[:,2])
-X4 = np.array(X_samples[:,3])
 
 
 def likelihood(alpha, beta_1, beta_2, X1, X2, Y, sigma):
@@ -36,10 +35,13 @@ def likelihood(alpha, beta_1, beta_2, X1, X2, Y, sigma):
 
 def prior_alpha(mu):
     key = random.PRNGKey(0)
-    return random.normal(key) + mu
+    key, subkey = random.split(key)
+    return random.normal(subkey) + mu
 
 def prior_beta(sigma):
-    return random.normal(key)*sigma**2
+    key = random.PRNGKey(0)
+    key, subkey = random.split(key)
+    return random.normal(subkey)*sigma
 
 def generate_samples(mu, sigma, sigma_beta_1, sigma_beta_2, X1, X2, Y):
     N = 1000
@@ -54,22 +56,22 @@ def generate_samples(mu, sigma, sigma_beta_1, sigma_beta_2, X1, X2, Y):
     for i in range(N+burn_in):
         key = random.PRNGKey(0)
         key, subkey = random.split(key)
-        alpha_tmp = random.normal(subkey)*(sigma**2/(1+sigma**2)) + np.mean(Y-beta_tmp1*X1 - beta_tmp2*X2) + sigma**2*alpha
+        alpha_tmp = random.normal(subkey)*np.sqrt((sigma**2/(1+sigma**2))) + (np.mean(Y-beta_tmp1*X1 - beta_tmp2*X2) - mu)/(1 + sigma**2) + mu
         if i > burn_in:
             alphas = alphas.at[i-burn_in].set(alpha_tmp)
 
-        key = random.PRNGKey(0)
+        
         key, subkey = random.split(key)
-        beta_tmp1 = random.normal(subkey)*(sigma*sigma_beta_1)**2/(sigma**2 +np.mean(X1)**2*sigma_beta_1**2) + sigma_beta_1**2*np.mean(X1*(Y-alpha_tmp-beta_tmp2*X2))/(sigma**2 + np.mean(X1)*sigma_beta_1**2)
+        beta_tmp1 = random.normal(subkey)*np.sqrt((sigma*sigma_beta_1)**2/(sigma**2 +np.mean(X1)**2*sigma_beta_1**2)) + sigma_beta_1**2*np.mean(X1*(Y-alpha_tmp-beta_tmp2*X2))/(sigma**2 + (np.mean(X1)*sigma_beta_1)**2)
         if i > burn_in:
             beta_1 = beta_1.at[i-burn_in].set(beta_tmp1)
 
-        key = random.PRNGKey(0)
+
         key, subkey = random.split(key)
-        beta_tmp2 = random.normal(subkey)*(sigma*sigma_beta_2)**2/(sigma**2 +np.mean(X2)**2*sigma_beta_2**2) + sigma_beta_2**2*np.mean(X2*(Y-alpha_tmp-beta_tmp1*X1))/(sigma**2 + np.mean(X2)*sigma_beta_2**2)
+        beta_tmp2 = random.normal(subkey)*np.sqrt((sigma*sigma_beta_2)**2/(sigma**2 +np.mean(X2)**2*sigma_beta_2**2)) + sigma_beta_2**2*np.mean(X2*(Y-alpha_tmp-beta_tmp1*X1))/(sigma**2 + (np.mean(X2)*sigma_beta_2)**2)
         if i > burn_in:
             beta_2 = beta_2.at[i-burn_in].set(beta_tmp1)
-    return beta_1, beta_2
+    return alphas, beta_1, beta_2
 
 
 def Chibs_method(alpha_0, sigma, samples):
